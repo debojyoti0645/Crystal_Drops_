@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "99004237921",
+    "firebase_url": "https://drinking-water-project-eab2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "drinking-water-project-eab2b",
+    "storage_bucket": "drinking-water-project-eab2b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:99004237921:android:343fd23c14f281d83fc220",
+        "android_client_info": {
+          "package_name": "com.example.water_supply"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxo3L_jWZRlL5903T9U3qS7yLEtmOuO40"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
