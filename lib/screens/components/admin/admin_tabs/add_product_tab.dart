@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:water_supply/service/api_service.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:water_supply/service/api_service.dart';
 
 class AddProductTab extends StatefulWidget {
   const AddProductTab({super.key});
@@ -168,7 +169,6 @@ class _AddProductTabState extends State<AddProductTab> {
     setState(() => _isLoading = true);
 
     try {
-      // Parse amount safely
       final double? amount = double.tryParse(_priceController.text);
       if (amount == null) {
         throw Exception('Invalid price format');
@@ -184,9 +184,13 @@ class _AddProductTabState extends State<AddProductTab> {
 
       if (!mounted) return;
 
-      // Show success message and clear form
       if (response['success'] == true) {
-        _clearForm();
+        // Navigate to home screen and remove all previous routes
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/s_admin_home', // Replace with your home route name
+          (route) => false, // This will remove all previous routes
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Product added successfully'),
@@ -195,7 +199,6 @@ class _AddProductTabState extends State<AddProductTab> {
           ),
         );
       } else {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response['message'] ?? 'Failed to add product'),
@@ -206,7 +209,6 @@ class _AddProductTabState extends State<AddProductTab> {
       }
     } catch (e) {
       if (!mounted) return;
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -225,16 +227,15 @@ class _AddProductTabState extends State<AddProductTab> {
     if (!mounted) return;
 
     setState(() {
-      // Clear all form fields in a single setState call
-      _titleController.text = '';
-      _priceController.text = '';
-      _descriptionController.text = '';
-      _imageUrlController.text = '';
+      _titleController.clear();
+      _priceController.clear();
+      _descriptionController.clear();
+      _imageUrlController.clear();
+      _selectedImage = null;
       selectedCategory = category;
     });
 
-    // Reset form validation states
-    _formKey.currentState?.reset();
+    _formKey.currentState?.reset(); // Reset form validation states
   }
 
   @override

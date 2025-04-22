@@ -27,17 +27,27 @@ class _CustMngConnectionState extends State<CustMngConnection> {
 
   Future<void> _initializeData() async {
     try {
-      // Initialize API service and load user data
       await _apiService.initializeAuthToken();
       await _loadUserData();
       
       if (_userId != null) {
         final result = await _apiService.getUserConnectionDetails(_userId!);
+        debugPrint('Connection API response: $result');
         
-        setState(() {
-          _connectionDetails = result['connectionDetails'];
-          _isLoading = false;
-        });
+        if (result['success'] && result['hasConnection']) {
+          setState(() {
+            _connectionDetails = {
+              'userId': _userId,
+              'connection': result['connectionDetails'],  // Updated to use connectionDetails
+            };
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _connectionDetails = null;
+            _isLoading = false;
+          });
+        }
       } else {
         setState(() => _isLoading = false);
       }
@@ -73,7 +83,6 @@ class _CustMngConnectionState extends State<CustMngConnection> {
       );
     }
 
-    // If connection details exist, show SubscribedScreen, otherwise show SubscribePage
     if (_connectionDetails != null) {
       return SubscribedScreen(
         connectionDetails: _connectionDetails!,

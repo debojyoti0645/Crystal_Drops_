@@ -9,13 +9,18 @@ import 'package:water_supply/screens/components/Delivery/assigned_orders.dart';
 import 'package:water_supply/screens/components/Delivery/delivery_history.dart';
 import 'package:water_supply/screens/components/Distributer/dist_payment_history.dart';
 import 'package:water_supply/screens/components/Distributer/dist_order_summary.dart';
+import 'package:water_supply/screens/components/admin/admin_home_screen.dart';
 import 'package:water_supply/screens/components/admin/all_transaction_screen.dart';
 import 'package:water_supply/screens/components/admin/delivery_screen.dart';
+import 'package:water_supply/screens/components/admin/manage_admin_screen.dart';
+import 'package:water_supply/screens/components/admin/manage_connections.dart';
+import 'package:water_supply/screens/components/admin/manage_notification.dart';
 import 'package:water_supply/screens/components/admin/manage_orders.dart';
 import 'package:water_supply/screens/components/admin/manage_products.dart';
 import 'package:water_supply/screens/components/admin/manage_users.dart';
 import 'package:water_supply/screens/components/Customer/cart/cart_screen.dart';
 import 'package:water_supply/screens/components/admin/manage_zones.dart';
+import 'package:water_supply/screens/components/admin/n_admin_homescreen.dart';
 import 'package:water_supply/screens/profile_screen.dart';
 import 'package:water_supply/service/api_service.dart';
 import 'screens/splash_screen.dart';
@@ -49,10 +54,15 @@ class MyApp extends StatelessWidget {
         home: SplashScreen(),
         routes: {
           '/cart': (context) => CartScreen(),
+          '/s_admin_home': (context) => AdminHomeScreen(),
+          '/notification': (context) => ManageNotificationScreen(),
           '/manage-users': (context) => ManageUsers(),
           '/manage-products': (context) => ManageProducts(),
           '/manage-orders': (context) => ManageOrders(),
           '/manage-zones': (context) => ManageZonesScreen(),
+          '/manage-admin': (context) => ManageAdminScreen(),
+          '/as-admin': (context) => AsAdminHomeScreen(),
+          '/manage-connections': (context) => ManageConnectionsScreen(),
           '/subscription': (context) => SubscribePage(),
           '/orders': (context) => CustOrderSummary(),
           '/dist_orders': (context) => OrderSummary(),

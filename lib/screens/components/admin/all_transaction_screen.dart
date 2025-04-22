@@ -90,8 +90,10 @@ class _AllTransactionScreenState extends State<AllTransactionScreen>
     final formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(createdAt);
     
     // Extract data from the correct fields
-    final orderId = order['orderId'] ?? 'N/A';  // Changed from '_id' to 'orderId'
-    final buyerId = order['buyer'] ?? 'N/A';    // Changed from userData?['accountId'] to 'buyer'
+    final orderId = order['orderId'] ?? 'N/A';
+    final buyerId = order['buyer'] ?? 'N/A';
+    final buyerName = order['buyerName'] ?? 'N/A';
+    final buyerRole = order['buyerRole']?.toString().toUpperCase() ?? 'N/A';
     final amount = order['formattedAmount'] ?? '₹${order['totalAmount'] ?? 0}';
     final quantity = order['quantity']?.toString() ?? 'N/A';
 
@@ -121,11 +123,19 @@ class _AllTransactionScreenState extends State<AllTransactionScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              'Customer ID: $buyerId',
+              '$buyerName (ID: $buyerId)',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade700,
                 fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              'Role: $buyerRole',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontStyle: FontStyle.italic,
               ),
             ),
           ],
@@ -141,7 +151,9 @@ class _AllTransactionScreenState extends State<AllTransactionScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildDetailRow('Order ID', orderId),
+                _buildDetailRow('Customer Name', buyerName),
                 _buildDetailRow('Customer ID', buyerId),
+                _buildDetailRow('Role', buyerRole),
                 _buildDetailRow('Amount', amount),
                 _buildDetailRow('Quantity', quantity),
                 const Divider(height: 24),
@@ -240,23 +252,59 @@ class _AllTransactionScreenState extends State<AllTransactionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.blue.shade800,
-        title: const Text(
-          'All Transactions',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: TabBar(
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.amber,
-          indicatorColor: Colors.orange,
-          indicatorWeight: 3,
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Completed'),
-          ],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(130),
+        child: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.blue.shade800,
+          title: const Text(
+            'All Transactions',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              letterSpacing: 0.5,
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(65),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.blue.shade700,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white60,
+                indicatorColor: Colors.orange.shade400,
+                indicatorWeight: 3,
+                indicatorSize: TabBarIndicatorSize.label,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                tabs: [
+                  Tab(
+                    icon: Icon(
+                      Icons.pending_actions,
+                      color: Colors.orange.shade300,
+                    ),
+                    text: 'Pending',
+                  ),
+                  Tab(
+                    icon: Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.green.shade300,
+                    ),
+                    text: 'Completed',
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
       body: Container(
@@ -264,7 +312,7 @@ class _AllTransactionScreenState extends State<AllTransactionScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade800, Colors.blue.shade50],
+            colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
         child: _isLoading

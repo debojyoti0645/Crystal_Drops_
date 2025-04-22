@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:water_supply/service/api_service.dart';
 
@@ -30,9 +31,15 @@ class _SubscribePageState extends State<SubscribePage> {
   bool _isLoadingTypes = true;
   Map<String, dynamic>? selectedConnectionType;
 
+  late Razorpay _razorpay;
+  String _currentConnectionId = '';
+
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _initializeData();
   }
 
@@ -213,6 +220,248 @@ class _SubscribePageState extends State<SubscribePage> {
     }
   }
 
+  // First, add this method above the build method:
+  void _showPaymentOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Select Payment Method',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.payment, color: Colors.blue),
+                title: const Text('Pay Online'),
+                subtitle: const Text('Pay now using UPI, Card, or Net Banking'),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _processOnlinePayment();
+                },
+              ),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: const Icon(Icons.money, color: Colors.green),
+                title: const Text('Pay at Office'),
+                subtitle: const Text('Visit our office to complete the payment'),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _processCashPayment();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Update these methods:
+  void _processOnlinePayment() async {
+    try {
+      setState(() => _isLoading = true);
+      
+      // First create the connection
+      final connectionResult = await _apiService.createConnection(
+        connectionTypeId: selectedConnectionType!['connectionTypeId'],
+        waterTapNeeded: wantBottomJar,
+      );
+
+      if (!connectionResult['success']) {
+        _showError(connectionResult['message'] ?? 'Failed to create connection');
+        return;
+      }
+
+      // Get user profile for payment details
+      final userProfileResponse = await _apiService.getUserProfile();
+      debugPrint('User Profile Response: $userProfileResponse');
+
+      if (userProfileResponse['success'] && userProfileResponse['user'] != null) {
+        final userData = userProfileResponse['user'];
+        final connectionId = connectionResult['connection']['connectionId'];
+        final totalAmount = _calculateTotalAmount();
+
+        var options = {
+          'key': 'rzp_test_anTvhnaW9Kw7kN', // Replace with your Razorpay key
+          'amount': (totalAmount * 100).toInt(), // Amount in smallest currency unit
+          'name': 'Crystal Drops',
+          'description': 'Connection Subscription Payment',
+          'prefill': {
+            'contact': userData['phoneNo'] ?? '',
+            'email': userData['accountId'] ?? '',
+          },
+          'theme': {'color': '#007BFF'},
+          'retry': {'enabled': true, 'max_count': 1},
+          'modal': {'confirm_close': true, 'animation': true},
+        };
+
+        _razorpay.open(options);
+        
+        // Store connection ID for use in payment handlers
+        setState(() {
+          _currentConnectionId = connectionId;
+        });
+      } else {
+        throw Exception('Failed to get user profile data');
+      }
+    } catch (e) {
+      debugPrint('Error in online payment process: $e');
+      _showError('An error occurred during payment process');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _processCashPayment() async {
+    try {
+      setState(() => _isLoading = true);
+      
+      // Create connection for office payment
+      final result = await _apiService.createConnection(
+        connectionTypeId: selectedConnectionType!['connectionTypeId'],
+        waterTapNeeded: wantBottomJar,
+      );
+
+      if (result['success']) {
+        // Extract connection details from the response
+        final connectionData = result['connection'] as Map<String, dynamic>;
+        final connectionId = connectionData['connectionId'] ?? 'N/A';
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Payment Instructions'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Please visit our office to complete the payment:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Amount to Pay: ₹${_calculateTotalAmount()}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Connection ID: $connectionId',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Office Address:\n'
+                    '123 Main Street\n'
+                    'City, State\n'
+                    'Working Hours: 9 AM - 6 PM',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Pop the subscription page
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        _showError(result['message'] ?? 'Failed to create subscription');
+      }
+    } catch (e) {
+      debugPrint('Error in cash payment process: $e');
+      _showError('An error occurred while processing your request');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // Add these methods to handle different payment options:
+
+
+  double _calculateTotalAmount() {
+    if (selectedConnectionType == null) return 0;
+    
+    final baseAmount = selectedConnectionType!['amount'] ?? 0;
+    final regAmount = selectedConnectionType!['regAmount'] ?? 0;
+    final waterTapCharges = wantBottomJar ? selectedConnectionType!['waterTapCharges'] ?? 0 : 0;
+    
+    return (baseAmount + regAmount + waterTapCharges).toDouble();
+  }
+
+  Future<void> _confirmOfflinePaymentRequest() async {
+    // TODO: Implement API call to create subscription with offline payment method
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Subscription request submitted for offline payment'),
+        backgroundColor: Colors.green,
+      ),
+    );
+    Navigator.pop(context);
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      // Activate the connection after successful payment
+      final activationResult = await _apiService.activateConnection(_currentConnectionId);
+
+      if (!mounted) return;
+
+      if (activationResult['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment Successful! Connection Activated'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        _showError('Payment successful but activation failed. Please contact support.');
+      }
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint('Error in payment success handler: $e');
+      _showError('Payment successful but activation failed. Please contact support.');
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (!mounted) return;
+    _showError('Payment Failed: ${response.message ?? 'Error occurred'}');
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear(); // Clear event handlers
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Add this check at the start of build
@@ -388,7 +637,7 @@ class _SubscribePageState extends State<SubscribePage> {
                       vertical: 15,
                     ),
                   ),
-                  onPressed: _isLoading ? null : _confirmSubscription,
+                  onPressed: _isLoading ? null : _showPaymentOptions,
                   child: _isLoading
                       ? const SizedBox(
                           width: 20,
@@ -399,7 +648,7 @@ class _SubscribePageState extends State<SubscribePage> {
                           ),
                         )
                       : const Text(
-                          'Confirm Subscription',
+                          'Request Subscription',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -536,8 +785,10 @@ class _SubscribePageState extends State<SubscribePage> {
       );
     }
 
-    final totalAmount = selectedConnectionType!['amount'] +
-        (wantBottomJar ? selectedConnectionType!['waterTapCharges'] : 0);
+    final baseAmount = selectedConnectionType!['amount'];
+    final regAmount = selectedConnectionType!['regAmount'] ?? 0;
+    final waterTapCharges = wantBottomJar ? selectedConnectionType!['waterTapCharges'] : 0;
+    final totalAmount = baseAmount + regAmount + waterTapCharges;
 
     return Card(
       elevation: 4,
@@ -557,9 +808,10 @@ class _SubscribePageState extends State<SubscribePage> {
             ),
             const SizedBox(height: 12),
             _detailRow('Container Size:', selectedConnectionType!['water_container']),
-            _detailRow('Base Price:', '₹${selectedConnectionType!['amount']}'),
+            _detailRow('Base Price:', '₹$baseAmount'),
+            _detailRow('Registration Amount:', '₹$regAmount'),
             if (wantBottomJar)
-              _detailRow('Water Tap Charges:', '₹${selectedConnectionType!['waterTapCharges']}'),
+              _detailRow('Water Tap Charges:', '₹$waterTapCharges'),
             const Divider(height: 24),
             _detailRow('Total Amount:', '₹$totalAmount',
                 style: const TextStyle(fontWeight: FontWeight.bold)),

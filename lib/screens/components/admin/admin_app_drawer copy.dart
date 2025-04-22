@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AdminAppDrawer extends StatelessWidget {
-  const AdminAppDrawer({Key? key}) : super(key: key);
+class SAdminAppDrawer extends StatelessWidget {
+  const SAdminAppDrawer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class AdminAppDrawer extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Admin Dashboard',
+                    'Super Admin Dashboard',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -52,8 +52,14 @@ class AdminAppDrawer extends StatelessWidget {
             }),
             _buildDrawerItem(
               context,
+              'Manage Users',
+              Icons.people,
+              () => Navigator.of(context).pushNamed('/manage-users'),
+            ),
+            _buildDrawerItem(
+              context,
               'Manage Connections',
-              Icons.settings,
+              Icons.link,
               () => Navigator.of(context).pushNamed('/manage-connections'),
             ),
             _buildDrawerItem(

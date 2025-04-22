@@ -45,33 +45,66 @@ class _ManageZonesScreenState extends State<ManageZonesScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.blue.shade800,
-        title: const Text(
-          'Manage Zones',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: TabBar(
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.amber,
-          indicatorColor: Colors.orange,
-          indicatorWeight: 3,
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.view_list),
-              text: 'View Zones',
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(130),
+        child: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.blue.shade800,
+          title: const Text(
+            'Manage Zones',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              letterSpacing: 0.5,
             ),
-            Tab(
-              icon: Icon(Icons.edit_location_alt),
-              text: 'Edit Zones',
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(65),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.blue.shade700,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white60,
+                indicatorColor: Colors.orange.shade400,
+                indicatorWeight: 3,
+                indicatorSize: TabBarIndicatorSize.label,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                tabs: [
+                  Tab(
+                    icon: Icon(
+                      Icons.view_list,
+                      color: Colors.orange.shade300,
+                    ),
+                    text: 'View Zones',
+                  ),
+                  Tab(
+                    icon: Icon(
+                      Icons.edit_location_alt,
+                      color: Colors.blue.shade300,
+                    ),
+                    text: 'Edit Zones',
+                  ),
+                  Tab(
+                    icon: Icon(
+                      Icons.add_location_alt,
+                      color: Colors.green.shade300,
+                    ),
+                    text: 'Create Zone',
+                  ),
+                ],
+              ),
             ),
-            Tab(
-              icon: Icon(Icons.add_location_alt),
-              text: 'Create Zone',
-            ),
-          ],
+          ),
         ),
       ),
       body: Container(
@@ -79,7 +112,7 @@ class _ManageZonesScreenState extends State<ManageZonesScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade800, Colors.blue.shade50],
+            colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
         child: TabBarView(

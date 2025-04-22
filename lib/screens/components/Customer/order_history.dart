@@ -481,6 +481,31 @@ class _CustOrderSummaryState extends State<CustOrderSummary>
     );
   }
 
+  // First, add this helper method to format the timestamp
+  String _formatDateTime(dynamic timestamp) {
+    if (timestamp == null) return 'N/A';
+    
+    try {
+      final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+        timestamp['_seconds'] * 1000,
+      );
+      
+      // Format date
+      final String date = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      
+      // Format time in 12-hour format with AM/PM
+      final String period = dateTime.hour >= 12 ? 'PM' : 'AM';
+      final int hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+      final String time = 
+          '${hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')} $period';
+      
+      return '$date at $time';
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  }
+
+  // Then modify the _buildOrderCard method to update the timestamp display
   Widget _buildOrderCard(dynamic order) {
     return Card(
       elevation: 8,
@@ -523,8 +548,20 @@ class _CustOrderSummaryState extends State<CustOrderSummary>
                       ),
                     ],
                   ),
+                ],
+              ),
+              SizedBox(height: getResponsiveHeight(context, 1)),
+              // Add new timestamp row
+              Row(
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: getResponsiveFontSize(context, 16),
+                    color: Colors.grey.shade600,
+                  ),
+                  SizedBox(width: getResponsiveWidth(context, 2)),
                   Text(
-                    order['formattedCreatedAt']['time'],
+                    _formatDateTime(order['createdAt']),
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: getResponsiveFontSize(context, 14),

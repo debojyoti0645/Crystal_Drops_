@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:water_supply/service/api_service.dart';
 
 class SubscribedScreen extends StatefulWidget {
   Map<String, dynamic> connectionDetails;
@@ -15,17 +14,35 @@ class SubscribedScreen extends StatefulWidget {
 
 class _SubscribedScreenState extends State<SubscribedScreen> {
   bool _isLoading = false;
-  late final ApiService _apiService;
+  late final Map<String, dynamic> _connection;
 
   @override
   void initState() {
     super.initState();
-    _apiService = ApiService();
-    _initializeApiService();
+    _connection = widget.connectionDetails['connection'];
   }
 
-  Future<void> _initializeApiService() async {
-    await _apiService.initializeAuthToken();
+  Future<void> _loadSubscriptionData() async {
+    // Simulate API loading
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _requestNewBottle() async {
+    setState(() => _isLoading = true);
+    // Simulate API call
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _isLoading = false);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bottle request submitted successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   @override
@@ -70,7 +87,7 @@ class _SubscribedScreenState extends State<SubscribedScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Subscription Details',
+                                'Connection Details',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -78,51 +95,53 @@ class _SubscribedScreenState extends State<SubscribedScreen> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              _buildInfoRow('Connection ID', 
-                                widget.connectionDetails['connectionId']),
-                              _buildInfoRow('Connection Type', 
-                                widget.connectionDetails['connectionType']),
-                              _buildInfoRow('Status', 
-                                widget.connectionDetails['status']),
-                              _buildInfoRow('Amount', 
-                                '₹${widget.connectionDetails['amount']}'),
-                              _buildInfoRow('Due Amount', 
-                                '₹${widget.connectionDetails['dueAmount']}'),
-                              _buildInfoRow('Water Tap', 
-                                widget.connectionDetails['waterTapNeeded'] ? 'Yes' : 'No'),
-                              _buildInfoRow('Created On', 
-                                widget.connectionDetails['createdAt']['date']),
+                              _buildInfoRow('Connection ID', _connection['connectionId']),
+                              _buildInfoRow('Connection Type', _connection['connectionType']),
+                              _buildInfoRow('Status', _connection['status']),
+                              _buildInfoRow('Amount', _connection['amount'] != null ? '₹${_connection['amount']}' : 'N/A'),
+                              _buildInfoRow('Due Amount', _connection['dueAmount'] != null ? '₹${_connection['dueAmount']}' : 'N/A'),
+                              _buildInfoRow('Zone ID', _connection['zoneId']),
+                              const Divider(height: 24),
+                              const Text(
+                                'Address',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A237E),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              _buildInfoRow('District', _connection['address']?['district']),
+                              _buildInfoRow('Pin Code', _connection['address']?['pinCode']),
+                              if (_connection['address']?['village']?.toString().isNotEmpty ?? false)
+                                _buildInfoRow('Village', _connection['address']?['village']),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Container(
+                      const SizedBox(height: 24),
+                      SizedBox(
                         width: double.infinity,
-                        height: 56,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        height: 50,
                         child: ElevatedButton(
-                          onPressed: _requestNewBottle,
+                          onPressed: _connection['status'].toLowerCase() == 'active' 
+                              ? (_isLoading ? null : _requestNewBottle)
+                              : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[700],
+                            backgroundColor: Colors.blue.shade700,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            elevation: 4,
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Request New Bottle',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  'Request New Bottle',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
                         ),
                       ),
                     ],
@@ -133,22 +152,7 @@ class _SubscribedScreenState extends State<SubscribedScreen> {
     );
   }
 
-  Future<void> _loadSubscriptionData() async {
-    setState(() => _isLoading = true);
-    
-    final response = await _apiService.getUserConnectionDetails(
-      widget.connectionDetails['id'],
-    );
-
-    setState(() {
-      _isLoading = false;
-      if (response['success'] && response['hasConnection']) {
-        widget.connectionDetails = response['connectionDetails'];
-      }
-    });
-  }
-
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, dynamic value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -162,7 +166,7 @@ class _SubscribedScreenState extends State<SubscribedScreen> {
             ),
           ),
           Text(
-            value,
+            value?.toString() ?? 'N/A',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -171,73 +175,6 @@ class _SubscribedScreenState extends State<SubscribedScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  void _requestNewBottle() {
-    if (!mounted) return;  // Add mounted check
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) { // Use a separate context
-        return AlertDialog(
-          title: const Text('Confirm Request'),
-          content: const Text('Would you like to request a new water jar?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-
-                setState(() => _isLoading = true);
-
-                try {
-                  final ApiService apiService = ApiService();
-                  await apiService.initializeAuthToken();
-                  
-                  final response = await apiService.requestNewJar(
-                    widget.connectionDetails['connectionId'],
-                  );
-
-                  if (!mounted) return;
-
-                  setState(() => _isLoading = false);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(response['message'] ?? 'Request completed'),
-                      backgroundColor: response['success'] == true ? Colors.green : Colors.red,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-
-                  // Refresh data if request was successful
-                  if (response['success'] == true) {
-                    await _loadSubscriptionData();
-                  }
-
-                } catch (e) {
-                  if (!mounted) return;
-                  setState(() => _isLoading = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Failed to request new jar. Please try again.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
-              ),
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

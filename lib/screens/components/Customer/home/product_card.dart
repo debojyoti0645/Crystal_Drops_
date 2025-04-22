@@ -26,7 +26,7 @@ class ProductCard extends StatelessWidget {
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 product['image'] ?? '',
-                fit: BoxFit.contain,
+                fit: BoxFit.cover,
                 width: double.infinity,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: Colors.grey[200],
@@ -56,10 +56,10 @@ class ProductCard extends StatelessWidget {
                 Text(
                   product['name'] ?? 'Untitled',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 4),

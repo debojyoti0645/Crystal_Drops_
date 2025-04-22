@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:water_supply/screens/components/admin/admin_app_drawer%20copy.dart';
 import 'package:water_supply/screens/components/admin/admin_app_drawer.dart';
 import 'package:water_supply/screens/login_screen.dart';
 
-class AdminHomeScreen extends StatefulWidget {
-  const AdminHomeScreen({super.key});
+class AsAdminHomeScreen extends StatefulWidget {
+  const AsAdminHomeScreen({super.key});
 
   @override
-  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
+  State<AsAdminHomeScreen> createState() => _AsAdminHomeScreenState();
 }
 
-class _AdminHomeScreenState extends State<AdminHomeScreen> {
+class _AsAdminHomeScreenState extends State<AsAdminHomeScreen> {
   final storage = FlutterSecureStorage();
 
   @override
@@ -26,22 +25,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         elevation: 0,
         backgroundColor: Colors.blue.shade800,
         title: const Text(
-          'SUPER ADMIN DASHBOARD',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          'ADMIN DASHBOARD',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pushNamed('/notification'),
-            icon: Icon(Icons.notifications),
-          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _showLogoutDialog(context),
           ),
         ],
       ),
-      drawer: const SAdminAppDrawer(),
+      drawer: const AdminAppDrawer(),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -52,6 +47,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ),
         child: Column(
           children: [
+            SizedBox(
+              height: 50,
+            ),
             // Dashboard Grid
             Expanded(
               child: Padding(
@@ -67,17 +65,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   children: [
                     _buildDashboardCard(
                       context,
-                      'Manage Users',
-                      Icons.people,
-                      '/manage-users',
-                      Colors.orange,
-                    ),
-                    _buildDashboardCard(
-                      context,
                       'Manage Connections',
-                      Icons.emoji_people_outlined,
+                      Icons.people,
                       '/manage-connections',
-                      Colors.red,
+                      Colors.orange,
                     ),
                     _buildDashboardCard(
                       context,
@@ -85,13 +76,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       Icons.inventory,
                       '/manage-products',
                       Colors.green,
-                    ),
-                    _buildDashboardCard(
-                      context,
-                      'Manage Admin',
-                      Icons.admin_panel_settings,
-                      '/manage-admin',
-                      Colors.teal,
                     ),
                     _buildDashboardCard(
                       context,

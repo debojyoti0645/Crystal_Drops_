@@ -6,6 +6,7 @@ import 'package:water_supply/screens/components/Customer/customer_home_screen.da
 import 'package:water_supply/screens/components/Delivery/delivery_home_screen.dart';
 import 'package:water_supply/screens/components/Distributer/distributor_home_screen.dart';
 import 'package:water_supply/screens/components/admin/admin_home_screen.dart';
+import 'package:water_supply/screens/components/admin/n_admin_homescreen.dart';
 import 'package:water_supply/screens/signup_page.dart';
 import 'package:water_supply/service/api_service.dart';
 
@@ -24,7 +25,24 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? selectedRole;
-  final List<String> roles = ['customer', 'distributor', 'delivery', 'admin'];
+
+  // First, create a mapping between display names and API values
+  final Map<String, String> roleMapping = {
+    'Customer': 'customer',
+    'Distributor': 'distributor',
+    'Delivery': 'delivery',
+    'Admin': 'admin',
+    'Super Admin': 'super_admin',
+  };
+
+  // Replace the existing roles list with display names
+  final List<String> roles = [
+    'Customer',
+    'Distributor',
+    'Delivery',
+    'Admin',
+    'Super Admin'
+  ];
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -143,6 +161,12 @@ class _LoginPageState extends State<LoginPage> {
         case 'admin':
           Navigator.pushAndRemoveUntil(
             context,
+            MaterialPageRoute(builder: (context) => AsAdminHomeScreen()),
+            (route) => false,
+          );
+        case 'super_admin':
+          Navigator.pushAndRemoveUntil(
+            context,
             MaterialPageRoute(builder: (context) => AdminHomeScreen()),
             (route) => false,
           );
@@ -235,7 +259,12 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                   child: DropdownButtonFormField<String>(
-                    value: selectedRole,
+                    value: selectedRole != null 
+                        ? roles.firstWhere(
+                            (r) => roleMapping[r] == selectedRole,
+                            orElse: () => roles[0]
+                          )
+                        : null,
                     icon: Icon(Icons.arrow_drop_down_rounded, color: Colors.blue.shade700),
                     decoration: InputDecoration(
                       labelText: "Role",
@@ -266,11 +295,11 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.grey.shade800,
                       fontSize: 16,
                     ),
-                    items: roles.map((String role) {
+                    items: roles.map((String displayRole) {
                       return DropdownMenuItem<String>(
-                        value: role,
+                        value: displayRole,
                         child: Text(
-                          role.capitalize(),
+                          displayRole,
                           style: const TextStyle(
                             fontSize: 16,
                           ),
@@ -279,8 +308,8 @@ class _LoginPageState extends State<LoginPage> {
                     }).toList(),
                     onChanged: (String? newValue) {
                       setState(() {
-                        selectedRole = newValue;
-                        roleController.text = newValue ?? '';
+                        selectedRole = roleMapping[newValue];
+                        roleController.text = roleMapping[newValue] ?? '';
                       });
                     },
                   ),

@@ -1899,9 +1899,8 @@ class ApiService {
       }
 
       // Determine the endpoint based on role
-      final String endpoint = role.toLowerCase() == 'distributor' 
-          ? 'distributor'
-          : 'customer';
+      final String endpoint =
+          role.toLowerCase() == 'distributor' ? 'distributor' : 'customer';
 
       debugPrint('Fetching $role info for ID: $userId');
 
@@ -1930,8 +1929,10 @@ class ApiService {
               seconds * 1000 + (nanoseconds / 1000000).round(),
             );
             userData['formattedCreatedAt'] = {
-              'date': '${createdAtDateTime.day}/${createdAtDateTime.month}/${createdAtDateTime.year}',
-              'time': '${createdAtDateTime.hour.toString().padLeft(2, '0')}:${createdAtDateTime.minute.toString().padLeft(2, '0')}',
+              'date':
+                  '${createdAtDateTime.day}/${createdAtDateTime.month}/${createdAtDateTime.year}',
+              'time':
+                  '${createdAtDateTime.hour.toString().padLeft(2, '0')}:${createdAtDateTime.minute.toString().padLeft(2, '0')}',
               'timestamp': createdAtDateTime.toIso8601String(),
             };
           }
@@ -1946,7 +1947,8 @@ class ApiService {
 
       return {
         'success': false,
-        'message': 'Failed to fetch user information. Status: ${response.statusCode}',
+        'message':
+            'Failed to fetch user information. Status: ${response.statusCode}',
         'user': null,
       };
     } catch (e) {
@@ -2033,16 +2035,54 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final decodedResponse = json.decode(response.body);
+        final List<dynamic> rawConnections =
+            decodedResponse['connections'] ?? [];
+        final List<Map<String, dynamic>> processedConnections = [];
+
+        for (var connection in rawConnections) {
+          final Map<String, dynamic> processedConnection = {
+            'id': connection['id'],
+            'name': connection['name'],
+            'description': connection['description'],
+            'water_container': connection['water_container'],
+            'imageUrl': connection['imageUrl'],
+            'regAmount': connection['regAmount']?.toDouble() ?? 0.0,
+            'amount': connection['amount']?.toDouble() ?? 0.0,
+            'quantity': connection['quantity'] ?? 1,
+            'waterTapCharges': connection['waterTapCharges']?.toDouble() ?? 0.0,
+            'connectionTypeId': connection['connectionTypeId'],
+          };
+
+          // Process createdAt timestamp if it exists
+          if (connection['createdAt'] != null) {
+            final seconds = connection['createdAt']['_seconds'] as int;
+            final nanoseconds = connection['createdAt']['_nanoseconds'] as int;
+            final createdAtDateTime = DateTime.fromMillisecondsSinceEpoch(
+              seconds * 1000 + (nanoseconds / 1000000).round(),
+            );
+            processedConnection['formattedCreatedAt'] = {
+              'date':
+                  '${createdAtDateTime.day}/${createdAtDateTime.month}/${createdAtDateTime.year}',
+              'time':
+                  '${createdAtDateTime.hour.toString().padLeft(2, '0')}:${createdAtDateTime.minute.toString().padLeft(2, '0')}',
+              'timestamp': createdAtDateTime.toIso8601String(),
+            };
+          }
+
+          processedConnections.add(processedConnection);
+        }
+
         return {
           'success': true,
-          'connections': decodedResponse['connections'] ?? [],
+          'connections': processedConnections,
           'count': decodedResponse['count'] ?? 0,
           'message': 'Connection types fetched successfully',
         };
       } else {
         return {
           'success': false,
-          'message': 'Failed to fetch connection types. Status: ${response.statusCode}',
+          'message':
+              'Failed to fetch connection types. Status: ${response.statusCode}',
           'connections': [],
           'count': 0,
         };
@@ -2057,4 +2097,511 @@ class ApiService {
       };
     }
   }
+
+  // FUNCTION TO ACTIVATE CONNECTION
+  Future<Map<String, dynamic>> activateConnection(String connectionId) async {
+    try {
+      if (_authToken == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token available',
+        };
+      }
+
+      debugPrint('Activating connection: $connectionId');
+
+      final response = await http.put(
+        Uri.parse(
+          'https://crystal-drop-backend.onrender.com/api/connections/activate',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+        body: json.encode({'connectionId': connectionId, 'status': 'active'}),
+      );
+
+      debugPrint('Activation response status: ${response.statusCode}');
+      debugPrint('Activation response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        final connectionData = decodedResponse['connection'];
+
+        // Process timestamp if it exists
+        if (connectionData != null && connectionData['createdAt'] != null) {
+          final seconds = connectionData['createdAt']['_seconds'] as int;
+          final nanoseconds =
+              connectionData['createdAt']['_nanoseconds'] as int;
+          final createdAtDateTime = DateTime.fromMillisecondsSinceEpoch(
+            seconds * 1000 + (nanoseconds / 1000000).round(),
+          );
+          connectionData['formattedCreatedAt'] = {
+            'date':
+                '${createdAtDateTime.day}/${createdAtDateTime.month}/${createdAtDateTime.year}',
+            'time':
+                '${createdAtDateTime.hour.toString().padLeft(2, '0')}:${createdAtDateTime.minute.toString().padLeft(2, '0')}',
+            'timestamp': createdAtDateTime.toIso8601String(),
+          };
+        }
+
+        return {
+          'success': true,
+          'message':
+              decodedResponse['message'] ?? 'Connection activated successfully',
+          'connection': connectionData,
+        };
+      } else {
+        return {
+          'success': false,
+          'message':
+              'Failed to activate connection. Status: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error activating connection: $e');
+      return {
+        'success': false,
+        'message': 'Network error occurred while activating connection',
+      };
+    }
+  }
+
+  // FUNCTION TO GET ALL USERS WITH CONNECTION
+  Future<Map<String, dynamic>> getAllUsersWithConnection() async {
+    try {
+      if (_authToken == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token available',
+          'connections': [],
+          'count': 0,
+        };
+      }
+
+      debugPrint('Fetching all users with connections');
+
+      final response = await http.get(
+        Uri.parse('${baseUrl}connections'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+      );
+
+      debugPrint('Connections response status: ${response.statusCode}');
+      debugPrint('Connections response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        final List<dynamic> rawConnections =
+            decodedResponse['connections'] ?? [];
+        final List<Map<String, dynamic>> processedConnections = [];
+
+        for (var connection in rawConnections) {
+          final Map<String, dynamic> processedConnection = {...connection};
+
+          // Process timestamp if exists
+          if (connection['createdAt'] != null) {
+            final seconds = connection['createdAt']['_seconds'] as int;
+            final nanoseconds = connection['createdAt']['_nanoseconds'] as int;
+            final createdAtDateTime = DateTime.fromMillisecondsSinceEpoch(
+              seconds * 1000 + (nanoseconds / 1000000).round(),
+            );
+            processedConnection['formattedCreatedAt'] = {
+              'date':
+                  '${createdAtDateTime.day}/${createdAtDateTime.month}/${createdAtDateTime.year}',
+              'time':
+                  '${createdAtDateTime.hour.toString().padLeft(2, '0')}:${createdAtDateTime.minute.toString().padLeft(2, '0')}',
+              'timestamp': createdAtDateTime.toIso8601String(),
+            };
+          }
+
+          // Format amount for display
+          if (processedConnection['amount'] != null) {
+            processedConnection['formattedAmount'] =
+                '₹${double.parse(processedConnection['amount'].toString()).toStringAsFixed(2)}';
+          }
+
+          // Add status indicators
+          processedConnection['isActive'] =
+              processedConnection['status'] == 'active';
+          processedConnection['isDeactive'] =
+              processedConnection['status'] == 'deactive';
+
+          // Add connection identifier
+          processedConnection['displayId'] =
+              '${processedConnection['customerName']} (${processedConnection['connectionId']})';
+
+          processedConnections.add(processedConnection);
+        }
+
+        return {
+          'success': true,
+          'connections': processedConnections,
+          'count': decodedResponse['count'] ?? 0,
+          'message': 'Connections fetched successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message':
+              'Failed to fetch connections. Status: ${response.statusCode}',
+          'connections': [],
+          'count': 0,
+        };
+      }
+    } catch (e) {
+      debugPrint('Error fetching connections: $e');
+      return {
+        'success': false,
+        'message': 'Network error occurred while fetching connections',
+        'connections': [],
+        'count': 0,
+      };
+    }
+  }
+
+  // FUNCTION TO DEACTIVATE CONNECTION
+  Future<Map<String, dynamic>> deactivateConnection(String connectionId) async {
+    try {
+      if (_authToken == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token available',
+        };
+      }
+
+      debugPrint('Deactivating connection: $connectionId');
+
+      final response = await http.put(
+        Uri.parse('${baseUrl}connections/deactivate'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+        body: json.encode({'connectionId': connectionId, 'status': 'deactive'}),
+      );
+
+      debugPrint('Deactivation response status: ${response.statusCode}');
+      debugPrint('Deactivation response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        final connectionData = decodedResponse['connection'];
+
+        // Process timestamp if it exists
+        if (connectionData != null) {
+          // Process createdAt timestamp
+          if (connectionData['createdAt'] != null) {
+            final seconds = connectionData['createdAt']['_seconds'] as int;
+            final nanoseconds =
+                connectionData['createdAt']['_nanoseconds'] as int;
+            final createdAtDateTime = DateTime.fromMillisecondsSinceEpoch(
+              seconds * 1000 + (nanoseconds / 1000000).round(),
+            );
+            connectionData['formattedCreatedAt'] = {
+              'date':
+                  '${createdAtDateTime.day}/${createdAtDateTime.month}/${createdAtDateTime.year}',
+              'time':
+                  '${createdAtDateTime.hour.toString().padLeft(2, '0')}:${createdAtDateTime.minute.toString().padLeft(2, '0')}',
+              'timestamp': createdAtDateTime.toIso8601String(),
+            };
+          }
+
+          // Process updatedAt timestamp
+          if (connectionData['updatedAt'] != null) {
+            final seconds = connectionData['updatedAt']['_seconds'] as int;
+            final nanoseconds =
+                connectionData['updatedAt']['_nanoseconds'] as int;
+            final updatedAtDateTime = DateTime.fromMillisecondsSinceEpoch(
+              seconds * 1000 + (nanoseconds / 1000000).round(),
+            );
+            connectionData['formattedUpdatedAt'] = {
+              'date':
+                  '${updatedAtDateTime.day}/${updatedAtDateTime.month}/${updatedAtDateTime.year}',
+              'time':
+                  '${updatedAtDateTime.hour.toString().padLeft(2, '0')}:${updatedAtDateTime.minute.toString().padLeft(2, '0')}',
+              'timestamp': updatedAtDateTime.toIso8601String(),
+            };
+          }
+
+          // Format amount
+          if (connectionData['amount'] != null) {
+            connectionData['formattedAmount'] =
+                '₹${double.parse(connectionData['amount'].toString()).toStringAsFixed(2)}';
+          }
+        }
+
+        return {
+          'success': true,
+          'message':
+              decodedResponse['message'] ??
+              'Connection deactivated successfully',
+          'connection': connectionData,
+        };
+      } else {
+        return {
+          'success': false,
+          'message':
+              'Failed to deactivate connection. Status: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error deactivating connection: $e');
+      return {
+        'success': false,
+        'message': 'Network error occurred while deactivating connection',
+      };
+    }
+  }
+
+  // FUNCTION TO CREATE ADMINS BY SUPER ADMIN
+  Future<Map<String, dynamic>> createAdmin({
+    required String name,
+    required String phoneNo,
+    required String password,
+    required String fatherName,
+    required Map<String, String> address,
+    required String aadharNo,
+    required String dob,
+    required String gender,
+    required String sansadName,
+    required String sansadNo,
+    required String mouzaName,
+    required String jurisdListNo,
+  }) async {
+    try {
+      if (_authToken == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token available',
+        };
+      }
+
+      debugPrint(
+        'Creating admin account at: ${baseUrl}super-admin/create-admin',
+      );
+
+      final response = await http.post(
+        Uri.parse('${baseUrl}super-admin/create-admin'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+        body: json.encode({
+          'name': name,
+          'phoneNo': phoneNo,
+          'role': 'admin',
+          'password': password,
+          'fatherName': fatherName,
+          'address': {
+            'gramPanchayat': address['gramPanchayat'],
+            'blockNo': address['blockNo'],
+            'village': address['village'],
+            'pinCode': address['pinCode'],
+            'district': address['district'],
+            'policeStation': address['policeStation'],
+          },
+          'aadharNo': aadharNo,
+          'dob': dob,
+          'gender': gender.toLowerCase(),
+          'sansadName': sansadName,
+          'sansadNo': sansadNo,
+          'mouzaName': mouzaName,
+          'jurisdListNo': jurisdListNo,
+        }),
+      );
+
+      debugPrint('Create admin response status: ${response.statusCode}');
+      debugPrint('Create admin response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decodedResponse = json.decode(response.body);
+        return {
+          'success': true,
+          'message': decodedResponse['message'] ?? 'Admin created successfully',
+          'admin': decodedResponse['admin'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to create admin. Status: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error creating admin: $e');
+      return {
+        'success': false,
+        'message': 'Network error occurred while creating admin',
+      };
+    }
+  }
+
+  // FUNCTION TO CREATE NOTIFICATIONS
+  Future<Map<String, dynamic>> createNotification({
+    required String title,
+    required String message,
+  }) async {
+    try {
+      if (_authToken == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token available',
+        };
+      }
+
+      debugPrint('Creating notification at: ${baseUrl}notifications');
+      debugPrint('Notification title: $title');
+      debugPrint('Notification message: $message');
+
+      final response = await http.post(
+        Uri.parse('${baseUrl}notifications'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+        body: json.encode({'title': title, 'message': message}),
+      );
+
+      debugPrint('Create notification response status: ${response.statusCode}');
+      debugPrint('Create notification response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decodedResponse = json.decode(response.body);
+
+        // Process timestamps if they exist
+        if (decodedResponse['notification'] != null) {
+          final notification = decodedResponse['notification'];
+
+          // Format createdAt
+          if (notification['createdAt'] != null) {
+            final createdAt = DateTime.parse(notification['createdAt']);
+            notification['formattedCreatedAt'] = {
+              'date': '${createdAt.day}/${createdAt.month}/${createdAt.year}',
+              'time':
+                  '${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}',
+              'timestamp': createdAt.toIso8601String(),
+            };
+          }
+
+          // Format expiresAt
+          if (notification['expiresAt'] != null) {
+            final expiresAt = DateTime.parse(notification['expiresAt']);
+            notification['formattedExpiresAt'] = {
+              'date': '${expiresAt.day}/${expiresAt.month}/${expiresAt.year}',
+              'time':
+                  '${expiresAt.hour.toString().padLeft(2, '0')}:${expiresAt.minute.toString().padLeft(2, '0')}',
+              'timestamp': expiresAt.toIso8601String(),
+            };
+          }
+        }
+
+        return {
+          'success': true,
+          'message':
+              decodedResponse['message'] ?? 'Notification created successfully',
+          'notification': decodedResponse['notification'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message':
+              'Failed to create notification. Status: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error creating notification: $e');
+      return {
+        'success': false,
+        'message': 'Network error occurred while creating notification',
+      };
+    }
+  }
+
+  // FUNCTION TO GET ALL NOTIFICATIONS
+  Future<Map<String, dynamic>> getAllNotifications() async {
+    try {
+      if (_authToken == null) {
+        return {
+          'success': false,
+          'message': 'No authentication token available',
+          'notifications': [],
+          'count': 0,
+        };
+      }
+
+      debugPrint('Fetching notifications from: ${baseUrl}notifications');
+
+      final response = await http.get(
+        Uri.parse('${baseUrl}notifications'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_authToken',
+        },
+      );
+
+      debugPrint('Notifications response status: ${response.statusCode}');
+      debugPrint('Notifications response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        final List<dynamic> rawNotifications =
+            decodedResponse['notifications'] ?? [];
+        final List<Map<String, dynamic>> processedNotifications = [];
+
+        for (var notification in rawNotifications) {
+          final Map<String, dynamic> processedNotification = {...notification};
+
+          // Format createdAt timestamp
+          if (notification['createdAt'] != null) {
+            final createdAt = DateTime.parse(notification['createdAt']);
+            processedNotification['formattedCreatedAt'] = {
+              'date': '${createdAt.day}/${createdAt.month}/${createdAt.year}',
+              'time':
+                  '${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}',
+              'timestamp': createdAt.toIso8601String(),
+            };
+          }
+
+          // Format expiresAt timestamp
+          if (notification['expiresAt'] != null) {
+            final expiresAt = DateTime.parse(notification['expiresAt']);
+            processedNotification['formattedExpiresAt'] = {
+              'date': '${expiresAt.day}/${expiresAt.month}/${expiresAt.year}',
+              'time':
+                  '${expiresAt.hour.toString().padLeft(2, '0')}:${expiresAt.minute.toString().padLeft(2, '0')}',
+              'timestamp': expiresAt.toIso8601String(),
+            };
+          }
+
+          processedNotifications.add(processedNotification);
+        }
+
+        return {
+          'success': true,
+          'notifications': processedNotifications,
+          'count': decodedResponse['count'] ?? 0,
+          'message': 'Notifications fetched successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message':
+              'Failed to fetch notifications. Status: ${response.statusCode}',
+          'notifications': [],
+          'count': 0,
+        };
+      }
+    } catch (e) {
+      debugPrint('Error fetching notifications: $e');
+      return {
+        'success': false,
+        'message': 'Network error occurred while fetching notifications',
+        'notifications': [],
+        'count': 0,
+      };
+    }
+  }
+
 }

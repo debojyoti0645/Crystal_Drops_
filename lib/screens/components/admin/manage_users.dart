@@ -33,15 +33,49 @@ class _ManageUsersState extends State<ManageUsers>
         backgroundColor: Colors.blue.shade800,
         title: const Text(
           'Manage Users',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            letterSpacing: 0.5,
+          ),
         ),
-        bottom: TabBar(
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.amber,
-          indicatorColor: Colors.orange,
-          indicatorWeight: 3,
-          controller: _tabController,
-          tabs: const [Tab(text: 'All Users'), Tab(text: 'Pending Requests')],
+        //tabs: const [Tab(text: 'All Users'), Tab(text: 'Pending Requests')],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(65),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.shade700,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white60,
+              indicatorColor: Colors.orange.shade400,
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              tabs: [
+                Tab(
+                  icon: Icon(
+                    Icons.people,
+                    color: Colors.orange.shade300,
+                  ),
+                  text: 'All Users',
+                ),
+                Tab(
+                  icon: Icon(Icons.pending, color: Colors.green.shade300),
+                  text: 'Pending Requests',
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       body: Container(
@@ -49,7 +83,7 @@ class _ManageUsersState extends State<ManageUsers>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade800, Colors.blue.shade50],
+            colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
         child: TabBarView(
@@ -98,7 +132,7 @@ class _AllUsersTabState extends State<AllUsersTab> {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('token');
-      
+
       if (token != null) {
         _apiService.setAuthToken(token);
       } else {
@@ -112,7 +146,7 @@ class _AllUsersTabState extends State<AllUsersTab> {
         }
         return;
       }
-      
+
       await _fetchApprovedAccounts();
     } catch (e) {
       if (mounted) {
@@ -191,7 +225,7 @@ class _AllUsersTabState extends State<AllUsersTab> {
           ),
           const SizedBox(width: 8),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
+            icon: const Icon(Icons.filter_list_outlined, color: Colors.black),
             onSelected: (String role) {
               _filterByRole(role);
             },
@@ -204,10 +238,7 @@ class _AllUsersTabState extends State<AllUsersTab> {
                   value: 'Distributor',
                   child: Text('Distributor'),
                 ),
-                const PopupMenuItem(
-                  value: 'Delivery',
-                  child: Text('Delivery'),
-                ),
+                const PopupMenuItem(value: 'Delivery', child: Text('Delivery')),
               ];
             },
           ),
@@ -234,36 +265,185 @@ class _AllUsersTabState extends State<AllUsersTab> {
   Widget _buildAccountCard(Map<String, dynamic> account) {
     final address = account['address'] as Map<String, dynamic>;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: ExpansionTile(
-        leading: const CircleAvatar(child: Icon(Icons.person)),
-        title: Text(account['name'] ?? 'Unknown'),
-        subtitle: Text('ID: ${account['accountId'] ?? 'N/A'}'),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Card(
+        elevation: 4,
+        margin: const EdgeInsets.only(bottom: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _getRoleColor(account['role']).withOpacity(0.3),
+              width: 1.5,
+            ),
+          ),
+          child: ExpansionTile(
+            backgroundColor: Colors.transparent,
+            collapsedBackgroundColor: Colors.transparent,
+            title: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _getRoleColor(account['role']).withOpacity(0.05),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _getRoleColor(account['role']).withOpacity(0.3),
+                      ),
+                    ),
+                    child: Icon(
+                      _getRoleIcon(account['role']),
+                      color: _getRoleColor(account['role']),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          account['name'] ?? 'Unknown',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'ID: ${account['accountId'] ?? 'N/A'}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                    ),
+                    child: Text(
+                      account['role']?.toString().toUpperCase() ?? 'N/A',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: _getRoleColor(account['role']),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildDetailRow(
+                      Icons.phone,
+                      Colors.green,
+                      'Phone',
+                      account['phoneNo'] ?? 'N/A',
+                    ),
+                    _buildDetailRow(
+                      Icons.person_outline,
+                      Colors.blue,
+                      'Father\'s Name',
+                      account['fatherName'] ?? 'N/A',
+                    ),
+                    _buildDetailRow(
+                      Icons.fingerprint,
+                      Colors.purple,
+                      'Aadhar',
+                      account['aadharNo'] ?? 'N/A',
+                    ),
+                    _buildDetailRow(
+                      Icons.calendar_today,
+                      Colors.orange,
+                      'DOB',
+                      account['dob'] ?? 'N/A',
+                    ),
+                    _buildDetailRow(
+                      Icons.location_on_outlined,
+                      Colors.red,
+                      'Zone',
+                      account['zoneId'] ?? 'Not Assigned',
+                    ),
+                    const Divider(height: 24),
+                    _buildAddressSection(address),
+                    // Add buttons for PendingRequestsTab if needed
+                    if (this is _PendingRequestsTabState) ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Your existing approval/rejection buttons
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    IconData icon,
+    Color color,
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow('Phone', account['phoneNo']),
-                _buildInfoRow('Role', account['role']),
-                _buildInfoRow('Father\'s Name', account['fatherName']),
-                _buildInfoRow('Gender', account['gender']),
-                _buildInfoRow('DOB', account['dob']),
-                _buildInfoRow('Aadhar', account['aadharNo']),
-                _buildInfoRow('Zone', account['zoneId'] ?? 'Not Assigned'),
-                const Divider(),
-                const Text(
-                  'Address:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  label,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
-                _buildInfoRow('Village', address['village']),
-                _buildInfoRow('Gram Panchayat', address['gramPanchayat']),
-                _buildInfoRow('Block', address['blockNo']),
-                _buildInfoRow('District', address['district']),
-                _buildInfoRow('PIN', address['pinCode']),
-                const SizedBox(height: 16),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
               ],
             ),
           ),
@@ -272,23 +452,77 @@ class _AllUsersTabState extends State<AllUsersTab> {
     );
   }
 
-  Widget _buildInfoRow(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(child: Text(value ?? 'N/A')),
-        ],
-      ),
+  Widget _buildAddressSection(Map<String, dynamic> address) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Address Details',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        _buildDetailRow(
+          Icons.home,
+          Colors.indigo,
+          'Village',
+          address['village'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.location_city,
+          Colors.teal,
+          'Gram Panchayat',
+          address['gramPanchayat'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.domain,
+          Colors.brown,
+          'Block',
+          address['blockNo'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.business,
+          Colors.deepPurple,
+          'District',
+          address['district'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.pin_drop,
+          Colors.pink,
+          'PIN Code',
+          address['pinCode'] ?? 'N/A',
+        ),
+      ],
     );
+  }
+
+  Color _getRoleColor(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return Colors.purple;
+      case 'customer':
+        return Colors.blue;
+      case 'distributor':
+        return Colors.green;
+      case 'delivery':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getRoleIcon(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return Icons.admin_panel_settings;
+      case 'customer':
+        return Icons.person;
+      case 'distributor':
+        return Icons.local_shipping;
+      case 'delivery':
+        return Icons.delivery_dining;
+      default:
+        return Icons.person_outline;
+    }
   }
 
   @override
@@ -367,7 +601,7 @@ class _PendingRequestsTabState extends State<PendingRequestsTab> {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('token');
-      
+
       if (token != null) {
         _apiService.setAuthToken(token);
       } else {
@@ -381,7 +615,7 @@ class _PendingRequestsTabState extends State<PendingRequestsTab> {
         }
         return;
       }
-      
+
       await _fetchPendingAccounts();
     } catch (e) {
       if (mounted) {
@@ -621,105 +855,180 @@ class _PendingRequestsTabState extends State<PendingRequestsTab> {
     final address = account['address'] as Map<String, dynamic>;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: ExpansionTile(
-        leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-        title: Text(account['name'] ?? 'Unknown'),
-        subtitle: Text('ID: ${account['accountId'] ?? 'N/A'}'),
+      elevation: 4,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _getRoleColor(account['role']).withOpacity(0.3),
+            width: 1.5,
+          ),
+        ),
+        child: ExpansionTile(
+          backgroundColor: Colors.transparent,
+          collapsedBackgroundColor: Colors.transparent,
+          title: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _getRoleColor(account['role']).withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _getRoleColor(account['role']).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Icon(
+                    _getRoleIcon(account['role']),
+                    color: _getRoleColor(account['role']),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        account['name'] ?? 'Unknown',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'ID: ${account['accountId'] ?? 'N/A'}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  ),
+                  child: Text(
+                    account['role']?.toString().toUpperCase() ?? 'N/A',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: _getRoleColor(account['role']),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _buildDetailRow(
+                    Icons.phone,
+                    Colors.green,
+                    'Phone',
+                    account['phoneNo'] ?? 'N/A',
+                  ),
+                  _buildDetailRow(
+                    Icons.person_outline,
+                    Colors.blue,
+                    'Father\'s Name',
+                    account['fatherName'] ?? 'N/A',
+                  ),
+                  _buildDetailRow(
+                    Icons.fingerprint,
+                    Colors.purple,
+                    'Aadhar',
+                    account['aadharNo'] ?? 'N/A',
+                  ),
+                  _buildDetailRow(
+                    Icons.calendar_today,
+                    Colors.orange,
+                    'DOB',
+                    account['dob'] ?? 'N/A',
+                  ),
+                  _buildDetailRow(
+                    Icons.location_on_outlined,
+                    Colors.red,
+                    'Zone',
+                    account['zoneId'] ?? 'Not Assigned',
+                  ),
+                  const Divider(height: 24),
+                  _buildAddressSection(address),
+                  // Add buttons for PendingRequestsTab if needed
+                  if (this is _PendingRequestsTabState) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // Your existing approval/rejection buttons
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    IconData icon,
+    Color color,
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow('Phone', account['phoneNo']),
-                _buildInfoRow('Role', account['role']),
-                _buildInfoRow('Father\'s Name', account['fatherName']),
-                _buildInfoRow('Gender', account['gender']),
-                _buildInfoRow('DOB', account['dob']),
-                _buildInfoRow('Aadhar', account['aadharNo']),
-                const Divider(),
-                const Text(
-                  'Address:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  label,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
-                _buildInfoRow('Village', address['village']),
-                _buildInfoRow('Gram Panchayat', address['gramPanchayat']),
-                _buildInfoRow('Block', address['blockNo']),
-                _buildInfoRow('District', address['district']),
-                _buildInfoRow('PIN', address['pinCode']),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      label: const Text('Approve'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                      ),
-                      onPressed: () async {
-                        final accountId = account['accountId']?.toString();
-                        final role = account['role']?.toString();
-
-                        if (accountId != null && role != null) {
-                          _approveAccount(accountId, role);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Invalid account data'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      label: const Text('Reject'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      onPressed: () async {
-                        final scaffoldMessenger = ScaffoldMessenger.of(context);
-                        try {
-                          final response = await _apiService.rejectAccount(
-                            account['accountId'],
-                            account['role'],
-                          );
-
-                          if (response['success']) {
-                            scaffoldMessenger.showSnackBar(
-                              const SnackBar(
-                                content: Text('Account rejected successfully'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            await _fetchPendingAccounts();
-                          } else {
-                            scaffoldMessenger.showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  response['message'] ??
-                                      'Failed to reject account',
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          scaffoldMessenger.showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'An error occurred while rejecting the account',
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ],
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -729,23 +1038,77 @@ class _PendingRequestsTabState extends State<PendingRequestsTab> {
     );
   }
 
-  Widget _buildInfoRow(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(child: Text(value ?? 'N/A')),
-        ],
-      ),
+  Widget _buildAddressSection(Map<String, dynamic> address) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Address Details',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        _buildDetailRow(
+          Icons.home,
+          Colors.indigo,
+          'Village',
+          address['village'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.location_city,
+          Colors.teal,
+          'Gram Panchayat',
+          address['gramPanchayat'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.domain,
+          Colors.brown,
+          'Block',
+          address['blockNo'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.business,
+          Colors.deepPurple,
+          'District',
+          address['district'] ?? 'N/A',
+        ),
+        _buildDetailRow(
+          Icons.pin_drop,
+          Colors.pink,
+          'PIN Code',
+          address['pinCode'] ?? 'N/A',
+        ),
+      ],
     );
+  }
+
+  Color _getRoleColor(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return Colors.purple;
+      case 'customer':
+        return Colors.blue;
+      case 'distributor':
+        return Colors.green;
+      case 'delivery':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getRoleIcon(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return Icons.admin_panel_settings;
+      case 'customer':
+        return Icons.person;
+      case 'distributor':
+        return Icons.local_shipping;
+      case 'delivery':
+        return Icons.delivery_dining;
+      default:
+        return Icons.person_outline;
+    }
   }
 
   @override

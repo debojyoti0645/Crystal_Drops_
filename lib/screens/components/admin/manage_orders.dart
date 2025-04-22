@@ -452,7 +452,7 @@ class _ManageOrdersState extends State<ManageOrders>
                                   orderStatus.toUpperCase(),
                                   style: TextStyle(
                                     color: _getStatusColor(orderStatus),
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -462,6 +462,27 @@ class _ManageOrdersState extends State<ManageOrders>
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.person_outline,
+                                    size: 16,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      '${order['buyerName']} (ID: ${order['buyer']})',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
@@ -565,7 +586,10 @@ class _ManageOrdersState extends State<ManageOrders>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _detailRow('Buyer ID', order['buyer']),
+                  _detailRow(
+                    'Buyer',
+                    '${order['buyerName']} (ID: ${order['buyer']})',
+                  ),
                   _detailRow(
                     'Role',
                     order['buyerRole']?.toUpperCase() ?? 'N/A',

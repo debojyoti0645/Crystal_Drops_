@@ -68,281 +68,251 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _isLoading 
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade800),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Loading Profile...',
-                    style: TextStyle(
-                      color: Colors.blue.shade800,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            )
+          ? _buildLoadingState()
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: Colors.red.shade300,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: TextStyle(
-                          color: Colors.red.shade300,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _loadProfile,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade800,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
+              ? _buildErrorState()
               : RefreshIndicator(
                   onRefresh: _loadProfile,
                   color: Colors.blue.shade800,
                   child: CustomScrollView(
                     slivers: [
                       SliverAppBar(
-                        expandedHeight: 240,
+                        expandedHeight: 300,
                         floating: false,
                         pinned: true,
                         backgroundColor: Colors.transparent,
                         flexibleSpace: FlexibleSpaceBar(
-                          background: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.blue.shade900,
-                                  Colors.blue.shade800,
-                                  Colors.blue.shade700,
-                                ],
+                          background: Stack(
+                            children: [
+                              // Gradient Background
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.blue.shade900,
+                                      Colors.blue.shade800,
+                                      Colors.indigo.shade700,
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Stack(
-                              children: [
-                                // Background Pattern
-                                Positioned.fill(
-                                  child: ShaderMask(
-                                    shaderCallback: (bounds) => LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.white.withOpacity(0.1),
-                                        Colors.white.withOpacity(0.05),
-                                      ],
-                                    ).createShader(bounds),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        image: DecorationImage(
-                                          image: NetworkImage(
-                                            'https://www.transparenttextures.com/patterns/cubes.png',
-                                          ),
-                                          repeat: ImageRepeat.repeat,
+                              // Animated Wave Pattern
+                              Positioned.fill(
+                                child: ShaderMask(
+                                  shaderCallback: (bounds) => LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.white.withOpacity(0.15),
+                                      Colors.white.withOpacity(0.05),
+                                    ],
+                                  ).createShader(bounds),
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                          'https://www.transparenttextures.com/patterns/waves.png',
                                         ),
+                                        repeat: ImageRepeat.repeat,
                                       ),
                                     ),
                                   ),
                                 ),
-                                // Profile Content
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const SizedBox(height: 48),
-                                    Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.2),
-                                        ),
-                                        child: CircleAvatar(
-                                          radius: 50,
-                                          backgroundColor: Colors.white,
-                                          child: Text(
-                                            _userProfile?['name']?.substring(0, 1).toUpperCase() ?? 'U',
-                                            style: TextStyle(
-                                              fontSize: 36,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.blue.shade800,
-                                            ),
+                              ),
+                              // Profile Content
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 60),
+                                  // Avatar with Glowing Effect
+                                  Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.2),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.blue.shade300.withOpacity(0.5),
+                                            blurRadius: 20,
+                                            spreadRadius: 5,
+                                          ),
+                                        ],
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: 55,
+                                        backgroundColor: Colors.white,
+                                        child: Text(
+                                          _userProfile?['name']?.substring(0, 1).toUpperCase() ?? 'U',
+                                          style: TextStyle(
+                                            fontSize: 42,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade800,
                                           ),
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _userProfile?['name'] ?? 'User',
+                                  ),
+                                  const SizedBox(height: 20),
+                                  // Name with Shadow
+                                  Text(
+                                    _userProfile?['name'] ?? 'User',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withOpacity(0.3),
+                                          offset: const Offset(0, 2),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Role Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      _userProfile?['role']?.toUpperCase() ?? 'USER',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 26,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        _userProfile?['role']?.toUpperCase() ?? 'USER',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
+                      // Info Sections
                       SliverToBoxAdapter(
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildSection(
+                                _buildEnhancedSection(
                                   'Account Information',
+                                  Icons.person_outline,
                                   [
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Account ID',
                                       _userProfile?['accountId'] ?? 'N/A',
                                       Icons.badge,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Role',
                                       _userProfile?['role']?.toUpperCase() ?? 'N/A',
                                       Icons.work,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Phone',
                                       _userProfile?['phoneNo'] ?? 'N/A',
                                       Icons.phone,
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
-                                _buildSection(
+                                _buildEnhancedSection(
                                   'Personal Information',
+                                  Icons.info_outline,
                                   [
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Father\'s Name',
                                       _userProfile?['fatherName'] ?? 'N/A',
                                       Icons.person,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Gender',
                                       _userProfile?['gender'] ?? 'N/A',
                                       Icons.people,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Date of Birth',
                                       _userProfile?['dob'] ?? 'N/A',
                                       Icons.calendar_today,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Aadhar Number',
                                       _userProfile?['aadharNo'] ?? 'N/A',
                                       Icons.credit_card,
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
-                                _buildSection(
+                                _buildEnhancedSection(
                                   'Location Details',
+                                  Icons.location_on,
                                   [
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Zone ID',
                                       _userProfile?['zoneId'] ?? 'Not Assigned',
                                       Icons.location_on,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Sansad',
                                       '${_userProfile?['sansadName'] ?? 'N/A'} (${_userProfile?['sansadNo'] ?? 'N/A'})',
                                       Icons.house,
                                     ),
-                                    _buildDivider(),
-                                    _buildInfoTile(
+                                    _buildEnhancedInfoTile(
                                       'Mouza',
                                       _userProfile?['mouzaName'] ?? 'N/A',
                                       Icons.place,
                                     ),
                                     if (_userProfile?['address'] != null) ...[
-                                      _buildDivider(),
-                                      _buildInfoTile(
+                                      _buildEnhancedInfoTile(
                                         'Village',
                                         _userProfile?['address']['village'] ?? 'N/A',
                                         Icons.home,
                                       ),
-                                      _buildDivider(),
-                                      _buildInfoTile(
+                                      _buildEnhancedInfoTile(
                                         'Gram Panchayat',
                                         _userProfile?['address']['gramPanchayat'] ?? 'N/A',
                                         Icons.location_city,
                                       ),
-                                      _buildDivider(),
-                                      _buildInfoTile(
+                                      _buildEnhancedInfoTile(
                                         'Block',
                                         _userProfile?['address']['blockNo'] ?? 'N/A',
                                         Icons.grid_view,
                                       ),
-                                      _buildDivider(),
-                                      _buildInfoTile(
+                                      _buildEnhancedInfoTile(
                                         'District',
                                         _userProfile?['address']['district'] ?? 'N/A',
                                         Icons.map,
                                       ),
-                                      _buildDivider(),
-                                      _buildInfoTile(
+                                      _buildEnhancedInfoTile(
                                         'Pin Code',
                                         _userProfile?['address']['pinCode'] ?? 'N/A',
                                         Icons.pin_drop,
@@ -351,45 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 32),
-                                Container(
-                                  width: double.infinity,
-                                  height: 54,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.red.shade700,
-                                        Colors.red.shade600,
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.red.shade200.withOpacity(0.5),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ElevatedButton.icon(
-                                    onPressed: _logout,
-                                    icon: const Icon(Icons.logout, size: 20),
-                                    label: const Text(
-                                      'Logout',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                _buildLogoutButton(),
                                 const SizedBox(height: 32),
                               ],
                             ),
@@ -402,54 +334,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Divider(
-        color: Colors.grey.shade200,
-        height: 1,
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade800),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading Profile...',
+            style: TextStyle(
+              color: Colors.blue.shade800,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Colors.red.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _error!,
+            style: TextStyle(
+              color: Colors.red.shade300,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadProfile,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade800,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedSection(String title, IconData titleIcon, List<Widget> children) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.blue.shade100.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.info_outline,
+                    titleIcon,
                     color: Colors.blue.shade800,
-                    size: 20,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade900,
                     letterSpacing: 0.5,
@@ -458,32 +439,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: children,
-            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(children: children),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoTile(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+  Widget _buildEnhancedInfoTile(String label, String value, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
               color: Colors.blue.shade800,
-              size: 20,
+              size: 22,
             ),
           ),
           const SizedBox(width: 16),
@@ -494,7 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: Colors.grey.shade600,
                     fontWeight: FontWeight.w500,
                   ),
@@ -503,15 +483,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey.shade900,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.red.shade700,
+            Colors.red.shade600,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.shade200.withOpacity(0.5),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: _logout,
+        icon: const Icon(Icons.logout, size: 22),
+        label: const Text(
+          'Logout',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.8,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
       ),
     );
   }
