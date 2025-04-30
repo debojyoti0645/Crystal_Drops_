@@ -64,8 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
       await prefs.clear();
       _navigateToLogin();
     } finally {
-      if (mounted) {
-      }
+      if (mounted) {}
     }
   }
 
@@ -117,15 +116,18 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF007BFF),
+      backgroundColor: Colors.green,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('lib/assets/logo.png', height: 450),
-            SizedBox(height: 20),
-            SpinKitThreeBounce(color: Colors.white, size: 30.0),
-          ],
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('lib/assets/logo.png', height: 450),
+              SizedBox(height: 20),
+              SpinKitThreeBounce(color: Colors.white, size: 30.0),
+            ],
+          ),
         ),
       ),
     );

@@ -131,13 +131,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                             ),
                           ),
                           SizedBox(height: 20),
-                          
+
                           SizedBox(height: 20),
                         ],
                       ),
                     ),
                     Container(
-                      height: 100,
+                      height: 50,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -147,13 +147,32 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                         ),
                       ),
                       child: Center(
-                        child: Text(
-                          "© 2025 Crystal Drops. All Rights Reserved.",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Developed by TalenQ",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ), 
+                            // logo
+                            SizedBox(height: 5),
+                            Container(
+                              height: 30,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                              ),
+                              child: Image.asset(
+                                'assets/talenQ_logo.png',
+                                height: 30,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
