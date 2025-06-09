@@ -301,7 +301,7 @@ class _SubscribePageState extends State<SubscribePage> {
         final totalAmount = _calculateTotalAmount();
 
         var options = {
-          'key': 'rzp_test_anTvhnaW9Kw7kN', // Replace with your Razorpay key
+          'key': 'rzp_test_7XcuXcLBa3FCdM', // Replace with your Razorpay key
           'amount': (totalAmount * 100).toInt(), // Amount in smallest currency unit
           'name': 'Crystal Drops',
           'description': 'Connection Subscription Payment',

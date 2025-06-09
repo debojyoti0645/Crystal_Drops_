@@ -158,19 +158,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
-                            ), 
-                            // logo
-                            SizedBox(height: 5),
-                            Container(
-                              height: 30,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                              child: Image.asset(
-                                'assets/talenQ_logo.png',
-                                height: 30,
-                              ),
                             ),
                           ],
                         ),

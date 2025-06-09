@@ -296,7 +296,7 @@ class _DistributorPaymentPageState extends State<DistributorPaymentPage> {
           userProfileResponse['user'] != null) {
 
         var options = {
-          'key': 'rzp_test_anTvhnaW9Kw7kN',
+          'key': 'rzp_test_7XcuXcLBa3FCdM	',
           'amount': (widget.totalAmount * 100).toInt(),
           'name': 'Crystal Drops',
           'description': 'Bulk Order Payment',
